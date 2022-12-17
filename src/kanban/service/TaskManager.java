@@ -63,7 +63,7 @@ public class TaskManager {
             return 0;
         }
         if (task instanceof EpicTask) {
-            task.setTaskId(nextTaskId++);
+            task.setTaskId(getNextTaskId());
             tasks.put(task.getTaskId(), task);
             return task.getTaskId();
         }
@@ -74,14 +74,14 @@ public class TaskManager {
                     || !(tasks.get(masterTaskId) instanceof EpicTask)) {
                 return 0;
             }
-            subTask.setTaskId(nextTaskId++);
+            subTask.setTaskId(getNextTaskId());
             tasks.put(subTask.getTaskId(), subTask);
             EpicTask masterTask = (EpicTask) tasks.get(masterTaskId);
             masterTask.addSubTaskId(subTask.getTaskId());
             updateEpicTaskStatus(masterTask);
             return subTask.getTaskId();
         }
-        task.setTaskId(nextTaskId++);
+        task.setTaskId(getNextTaskId());
         tasks.put(task.getTaskId(), task);
         return task.getTaskId();
     }
@@ -210,5 +210,9 @@ public class TaskManager {
         }
         epicTask.setStatus(status);
         return true;
+    }
+
+    private int getNextTaskId() {
+        return nextTaskId++;
     }
 }
