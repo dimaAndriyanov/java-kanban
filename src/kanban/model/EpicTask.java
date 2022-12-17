@@ -11,33 +11,33 @@ public class EpicTask extends Task {
     }
 
     public ArrayList<Integer> getSubTasksIds() {
-        return this.subTasksIds;
+        return subTasksIds;
     }
 
     public void addSubTaskId(int subTaskId) {
-        this.subTasksIds.add(subTaskId);
+        subTasksIds.add(subTaskId);
     }
 
     public void removeSubTaskId(int subTaskId) {
-        this.subTasksIds.remove((Integer) subTaskId);
+        subTasksIds.remove((Integer) subTaskId);
     }
 
     @Override
     public String toString() {
         String result = "EpicTask{"
-                + "name='" + this.getName() +"', ";
-        if (this.getDescription() == null) {
+                + "name='" + getName() +"', ";
+        if (getDescription() == null) {
             result += "description=null, ";
         } else {
-            result += "description.length=" + this.getDescription().length() + ", ";
+            result += "description.length=" + getDescription().length() + ", ";
         }
-        result += "taskId=" + this.getTaskId() + ", status='" + this.getStatus() + "', ";
-        if (this.subTasksIds.isEmpty()) {
+        result += "taskId=" + getTaskId() + ", status='" + getStatus() + "', ";
+        if (subTasksIds.isEmpty()) {
             result += "subTasksIds.isEmpty}";
         } else {
-            result += "subTasksIds=[" + this.subTasksIds.get(0);
-            for (int i = 1; i < this.subTasksIds.size(); i++) {
-                result += ", " + this.subTasksIds.get(i);
+            result += "subTasksIds=[" + subTasksIds.get(0);
+            for (int i = 1; i < subTasksIds.size(); i++) {
+                result += ", " + subTasksIds.get(i);
             }
             result +="]}";
         }

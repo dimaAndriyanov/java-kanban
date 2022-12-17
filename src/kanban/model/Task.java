@@ -10,24 +10,24 @@ public class Task {
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
-        this.taskId = 0;
-        this.status = TaskStatus.NEW;
+        taskId = 0;
+        status = TaskStatus.NEW;
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public String getDescription() {
-        return this.description;
+        return description;
     }
 
     public int getTaskId() {
-        return this.taskId;
+        return taskId;
     }
 
     public TaskStatus getStatus() {
-        return this.status;
+        return status;
     }
 
     public void setTaskId(int taskId) {
@@ -41,13 +41,13 @@ public class Task {
     @Override
     public String toString() {
         String result = "Task{"
-                + "name='" + this.name +"', ";
-        if (this.description == null) {
+                + "name='" + name +"', ";
+        if (description == null) {
             result += "description=null, ";
         } else {
-            result += "description.length=" + this.description.length() + ", ";
+            result += "description.length=" + description.length() + ", ";
         }
-        result += "taskId=" + this.taskId + ", status='" + status + "'}";
+        result += "taskId=" + taskId + ", status='" + status + "'}";
         return result;
     }
 }

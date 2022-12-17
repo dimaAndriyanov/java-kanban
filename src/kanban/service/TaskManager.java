@@ -13,12 +13,12 @@ public class TaskManager {
     // после каждой сложной задачи идет список ее подзадач
     public ArrayList<Task> getAllTasks() {
         ArrayList<Task> allTasks = new ArrayList<>();
-        if (this.tasks.isEmpty()) {
+        if (tasks.isEmpty()) {
             return allTasks;
         }
         ArrayList<Task> allEpicTasks = new ArrayList<>();
-        for (Integer taskId : this.tasks.keySet()) {
-            Task task = this.tasks.get(taskId);
+        for (Integer taskId : tasks.keySet()) {
+            Task task = tasks.get(taskId);
             if (task instanceof SubTask) {
                 continue;
             }
@@ -26,9 +26,9 @@ public class TaskManager {
                 allEpicTasks.add(task);
                 EpicTask epicTask = (EpicTask) task;
                 for (Integer subTaskId : epicTask.getSubTasksIds()) {
-                    if (this.tasks.containsKey(subTaskId)
-                            && (this.tasks.get(subTaskId) instanceof SubTask)) {
-                        allEpicTasks.add(this.tasks.get(subTaskId));
+                    if (tasks.containsKey(subTaskId)
+                            && (tasks.get(subTaskId) instanceof SubTask)) {
+                        allEpicTasks.add(tasks.get(subTaskId));
                     } else {
                         allEpicTasks.add(null);
                     }
@@ -42,14 +42,14 @@ public class TaskManager {
     }
 
     public void deleteAllTasks() {
-        this.tasks.clear();
+        tasks.clear();
     }
 
     public Task getTaskByTaskId(int taskId) {
-        if (!this.tasks.containsKey(taskId)) {
+        if (!tasks.containsKey(taskId)) {
             return null;
         }
-        return this.tasks.get(taskId);
+        return tasks.get(taskId);
     }
 
     // Добавляет новую задачу в список отслеживаемых задач
@@ -63,26 +63,26 @@ public class TaskManager {
             return 0;
         }
         if (task instanceof EpicTask) {
-            task.setTaskId(this.nextTaskId++);
-            this.tasks.put(task.getTaskId(), task);
+            task.setTaskId(nextTaskId++);
+            tasks.put(task.getTaskId(), task);
             return task.getTaskId();
         }
         if (task instanceof SubTask) {
             SubTask subTask = (SubTask) task;
             int masterTaskId = subTask.getMasterTaskId();
-            if (!this.tasks.containsKey(masterTaskId)
-                    || !(this.tasks.get(masterTaskId) instanceof EpicTask)) {
+            if (!tasks.containsKey(masterTaskId)
+                    || !(tasks.get(masterTaskId) instanceof EpicTask)) {
                 return 0;
             }
-            subTask.setTaskId(this.nextTaskId++);
-            this.tasks.put(subTask.getTaskId(), subTask);
-            EpicTask masterTask = (EpicTask) this.tasks.get(masterTaskId);
+            subTask.setTaskId(nextTaskId++);
+            tasks.put(subTask.getTaskId(), subTask);
+            EpicTask masterTask = (EpicTask) tasks.get(masterTaskId);
             masterTask.addSubTaskId(subTask.getTaskId());
-            this.updateEpicTaskStatus(masterTask);
+            updateEpicTaskStatus(masterTask);
             return subTask.getTaskId();
         }
-        task.setTaskId(this.nextTaskId++);
-        this.tasks.put(task.getTaskId(), task);
+        task.setTaskId(nextTaskId++);
+        tasks.put(task.getTaskId(), task);
         return task.getTaskId();
     }
 
@@ -95,26 +95,26 @@ public class TaskManager {
     // Подзадачи также должны иметь одинаковые сложные задачи, частью которых являются.
     // Сложные задачи также должны иметь одниковые подзадачи.
     public int updateTask(Task task) {
-        if (task == null || !this.tasks.containsKey(task.getTaskId())
-            || (task.getClass() != this.tasks.get(task.getTaskId()).getClass())) {
+        if (task == null || !tasks.containsKey(task.getTaskId())
+            || (task.getClass() != tasks.get(task.getTaskId()).getClass())) {
             return 0;
         }
         if (task instanceof SubTask) {
             SubTask subTask = (SubTask) task;
-            if (subTask.getMasterTaskId() != ((SubTask) this.tasks.get(subTask.getTaskId())).getMasterTaskId()) {
+            if (subTask.getMasterTaskId() != ((SubTask) tasks.get(subTask.getTaskId())).getMasterTaskId()) {
                 return 0;
             }
-            if (!this.tasks.containsKey(subTask.getMasterTaskId())
-                    || !(this.tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
+            if (!tasks.containsKey(subTask.getMasterTaskId())
+                    || !(tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
                 return 0;
             }
-            this.tasks.put(subTask.getTaskId(), subTask);
-            this.updateEpicTaskStatus((EpicTask) this.tasks.get(subTask.getMasterTaskId()));
+            tasks.put(subTask.getTaskId(), subTask);
+            updateEpicTaskStatus((EpicTask) tasks.get(subTask.getMasterTaskId()));
             return subTask.getTaskId();
         }
         if (task instanceof EpicTask) {
             EpicTask updatedEpicTask = (EpicTask) task;
-            EpicTask originalEpicTask = (EpicTask) this.tasks.get(updatedEpicTask.getTaskId());
+            EpicTask originalEpicTask = (EpicTask) tasks.get(updatedEpicTask.getTaskId());
             if (updatedEpicTask.getSubTasksIds().size() != originalEpicTask.getSubTasksIds().size()) {
                 return 0;
             }
@@ -123,10 +123,10 @@ public class TaskManager {
                     return 0;
                 }
             }
-            this.tasks.put(updatedEpicTask.getTaskId(), updatedEpicTask);
+            tasks.put(updatedEpicTask.getTaskId(), updatedEpicTask);
             return updatedEpicTask.getTaskId();
         }
-        this.tasks.put(task.getTaskId(), task);
+        tasks.put(task.getTaskId(), task);
         return task.getTaskId();
     }
 
@@ -135,34 +135,34 @@ public class TaskManager {
     // При удалении подзадачи происходит редактирование сложной задачи, частью которой она является.
     // При неверной ссылке на сложную задачу подзадача все равно удаляется, но метод возвращает 0.
     public int deleteTaskByTaskId(int taskId) {
-        if (!this.tasks.containsKey(taskId)) {
+        if (!tasks.containsKey(taskId)) {
             return 0;
         }
-        Task task = this.tasks.get(taskId);
+        Task task = tasks.get(taskId);
         if (task instanceof EpicTask) {
             EpicTask epicTask = (EpicTask) task;
             for (Integer subTaskId : epicTask.getSubTasksIds()) {
-                if (this.tasks.containsKey(subTaskId) && (this.tasks.get(subTaskId) instanceof SubTask)) {
-                    this.tasks.remove(subTaskId);
+                if (tasks.containsKey(subTaskId) && (tasks.get(subTaskId) instanceof SubTask)) {
+                    tasks.remove(subTaskId);
                 }
             }
-            this.tasks.remove(taskId);
+            tasks.remove(taskId);
             return taskId;
         }
         if (task instanceof SubTask) {
             SubTask subTask = (SubTask) task;
-            if (!this.tasks.containsKey(subTask.getMasterTaskId())
-                    || !(this.tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
-                this.tasks.remove(taskId);
+            if (!tasks.containsKey(subTask.getMasterTaskId())
+                    || !(tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
+                tasks.remove(taskId);
                 return 0;
             }
-            EpicTask masterTask = (EpicTask) this.tasks.get(subTask.getMasterTaskId());
+            EpicTask masterTask = (EpicTask) tasks.get(subTask.getMasterTaskId());
             masterTask.removeSubTaskId(taskId);
-            this.tasks.remove(taskId);
-            this.updateEpicTaskStatus(masterTask);
+            tasks.remove(taskId);
+            updateEpicTaskStatus(masterTask);
             return taskId;
         }
-        this.tasks.remove(taskId);
+        tasks.remove(taskId);
         return taskId;
     }
 
@@ -175,9 +175,9 @@ public class TaskManager {
         }
         ArrayList<SubTask> allSubTasks = new ArrayList<>();
         for (Integer subTaskId : ((EpicTask) task).getSubTasksIds()) {
-            if (this.tasks.containsKey(subTaskId)
-                && this.tasks.get(subTaskId) instanceof SubTask) {
-                allSubTasks.add((SubTask) this.tasks.get(subTaskId));
+            if (tasks.containsKey(subTaskId)
+                && tasks.get(subTaskId) instanceof SubTask) {
+                allSubTasks.add((SubTask) tasks.get(subTaskId));
             } else {
                 allSubTasks.add(null);
             }
@@ -193,17 +193,17 @@ public class TaskManager {
             return true;
         }
         for (Integer subTaskId : epicTask.getSubTasksIds()) {
-            if (!this.tasks.containsKey(subTaskId)) {
+            if (!tasks.containsKey(subTaskId)) {
                 return false;
             }
         }
-        TaskStatus status = this.tasks.get(epicTask.getSubTasksIds().get(0)).getStatus();
+        TaskStatus status = tasks.get(epicTask.getSubTasksIds().get(0)).getStatus();
         if (status == TaskStatus.IN_PROGRESS) {
             epicTask.setStatus(TaskStatus.IN_PROGRESS);
             return true;
         }
         for (int i = 1; i < epicTask.getSubTasksIds().size(); i++) {
-            if (status != this.tasks.get(epicTask.getSubTasksIds().get(i)).getStatus()) {
+            if (status != tasks.get(epicTask.getSubTasksIds().get(i)).getStatus()) {
                 epicTask.setStatus(TaskStatus.IN_PROGRESS);
                 return true;
             }

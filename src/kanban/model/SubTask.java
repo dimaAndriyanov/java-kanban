@@ -13,23 +13,23 @@ public class SubTask extends Task {
     }
 
     public int getMasterTaskId() {
-        return this.masterTaskId;
+        return masterTaskId;
     }
 
     @Override
     public String toString() {
         String result = "SubTask{"
-                + "name='" + this.getName() +"', ";
-        if (this.getDescription() == null) {
+                + "name='" + getName() +"', ";
+        if (getDescription() == null) {
             result += "description=null, ";
         } else {
-            result += "description.length=" + this.getDescription().length() + ", ";
+            result += "description.length=" + getDescription().length() + ", ";
         }
-        result += "taskId=" + this.getTaskId() + ", status='" + this.getStatus() + "', ";
-        if (this.masterTaskId == 0) {
+        result += "taskId=" + getTaskId() + ", status='" + getStatus() + "', ";
+        if (masterTaskId == 0) {
             result += "masterTask=null}";
         } else {
-            result += "masterTaskId=" + this.masterTaskId + "}";
+            result += "masterTaskId=" + masterTaskId + "}";
         }
         return result;
     }
