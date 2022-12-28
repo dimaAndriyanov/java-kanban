@@ -1,14 +1,10 @@
 package kanban.model;
 
-//Data-класс для хранения данных задачи, которая является подзадачей
 public class SubTask extends Task {
-    private int masterTaskId;
+    private final int masterTaskId;
 
-    public SubTask(String name, String description) {
+    public SubTask(String name, String description, int masterTaskId) {
         super(name, description);
-    }
-
-    public void setMasterTaskId(int masterTaskId) {
         this.masterTaskId = masterTaskId;
     }
 

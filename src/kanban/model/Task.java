@@ -1,6 +1,5 @@
 package kanban.model;
 
-//Data-класс для хранения данных о задаче
 public class Task {
     private String name;
     private String description;
@@ -36,6 +35,14 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override

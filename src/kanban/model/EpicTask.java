@@ -2,9 +2,8 @@ package kanban.model;
 
 import java.util.ArrayList;
 
-//Data-класс для хранения данных о сложной задаче (содержащей подзадачи)
 public class EpicTask extends Task {
-    private ArrayList<Integer> subTasksIds = new ArrayList<>();
+    private final ArrayList<Integer> subTasksIds = new ArrayList<>();
 
     public EpicTask(String name, String description) {
         super(name, description);
