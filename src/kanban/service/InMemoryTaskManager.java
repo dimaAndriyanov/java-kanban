@@ -6,10 +6,12 @@ import java.util.HashMap;
 
 public class InMemoryTaskManager implements TaskManager{
     private int nextTaskId;
+    private HistoryManager historyManager;
     private final HashMap<Integer, Task> tasks = new HashMap<>();
 
-    public InMemoryTaskManager(int nextTaskId) {
+    public InMemoryTaskManager(int nextTaskId, HistoryManager historyManager) {
         this.nextTaskId = nextTaskId;
+        this.historyManager = historyManager;
     }
 
     //todo заменить возвращаемый null на Exception
@@ -55,6 +57,7 @@ public class InMemoryTaskManager implements TaskManager{
         if (!tasks.containsKey(taskId)) {
             return null;
         }
+        historyManager.add(taskId);
         return tasks.get(taskId);
     }
 
@@ -198,5 +201,22 @@ public class InMemoryTaskManager implements TaskManager{
 
     private int getNextTaskId() {
         return nextTaskId++;
+    }
+
+    //todo заменить возвращаемый null на Exception
+    @Override
+    public ArrayList<Task> getHistory() {
+        ArrayList<Task> history = new ArrayList<>();
+        if (historyManager.getHistory().isEmpty()) {
+            return history;
+        }
+        for (Integer taskId : historyManager.getHistory()) {
+            if (tasks.containsKey(taskId)) {
+                history.add(tasks.get(taskId));
+            } else {
+                history.add(null);
+            }
+        }
+        return history;
     }
 }
