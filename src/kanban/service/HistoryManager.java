@@ -1,9 +1,9 @@
 package kanban.service;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface HistoryManager {
-    ArrayList<Integer> getHistory();
+    List<Integer> getHistory();
 
     void add(int taskId);
 }

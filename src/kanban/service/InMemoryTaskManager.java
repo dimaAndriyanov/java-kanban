@@ -1,22 +1,23 @@
 package kanban.service;
 
 import kanban.model.*;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 
 public class InMemoryTaskManager implements TaskManager{
     private int nextTaskId;
-    private HistoryManager historyManager;
-    private final HashMap<Integer, Task> tasks = new HashMap<>();
+    private final HistoryManager historyManager;
+    private final Map<Integer, Task> tasks = new HashMap<>();
 
     public InMemoryTaskManager(int nextTaskId, HistoryManager historyManager) {
         this.nextTaskId = nextTaskId;
         this.historyManager = historyManager;
     }
 
-    //todo заменить возвращаемый null на Exception
     @Override
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         ArrayList<Task> allTasks = new ArrayList<>();
         if (tasks.isEmpty()) {
             return allTasks;
@@ -51,7 +52,6 @@ public class InMemoryTaskManager implements TaskManager{
         tasks.clear();
     }
 
-    //todo заменить возвращаемый null на Exception
     @Override
     public Task getTaskByTaskId(int taskId) {
         if (!tasks.containsKey(taskId)) {
@@ -155,9 +155,8 @@ public class InMemoryTaskManager implements TaskManager{
         return taskId;
     }
 
-    //todo заменить возвращаемый null на Exception
     @Override
-    public ArrayList<SubTask> getAllSubTasksByEpicTask(Task task) {
+    public List<SubTask> getAllSubTasksByEpicTask(Task task) {
         if (!(task instanceof EpicTask)) {
             return null;
         }
@@ -173,7 +172,6 @@ public class InMemoryTaskManager implements TaskManager{
         return allSubTasks;
     }
 
-    //todo заменить возвращаемый тип boolean на void с Exception в случае некорректного списка подзадач
     private boolean updateEpicTaskStatus(EpicTask epicTask) {
         if (epicTask.getSubTasksIds().isEmpty()) {
             epicTask.setStatus(TaskStatus.NEW);
@@ -203,19 +201,11 @@ public class InMemoryTaskManager implements TaskManager{
         return nextTaskId++;
     }
 
-    //todo заменить возвращаемый null на Exception
     @Override
-    public ArrayList<Task> getHistory() {
+    public List<Task> getHistory() {
         ArrayList<Task> history = new ArrayList<>();
-        if (historyManager.getHistory().isEmpty()) {
-            return history;
-        }
         for (Integer taskId : historyManager.getHistory()) {
-            if (tasks.containsKey(taskId)) {
-                history.add(tasks.get(taskId));
-            } else {
-                history.add(null);
-            }
+            history.add(tasks.getOrDefault(taskId, null));
         }
         return history;
     }

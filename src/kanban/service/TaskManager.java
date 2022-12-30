@@ -1,10 +1,10 @@
 package kanban.service;
 
 import kanban.model.*;
-import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
-    ArrayList<Task> getAllTasks();
+    List<Task> getAllTasks();
 
     void deleteAllTasks();
 
@@ -16,7 +16,7 @@ public interface TaskManager {
 
     int deleteTaskByTaskId(int taskId);
 
-    ArrayList<SubTask> getAllSubTasksByEpicTask(Task task);
+    List<SubTask> getAllSubTasksByEpicTask(Task task);
 
-    ArrayList<Task> getHistory();
+    List<Task> getHistory();
 }
