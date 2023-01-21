@@ -19,9 +19,6 @@ public class InMemoryTaskManager implements TaskManager{
     @Override
     public List<Task> getAllTasks() {
         ArrayList<Task> allTasks = new ArrayList<>();
-        if (tasks.isEmpty()) {
-            return allTasks;
-        }
         ArrayList<Task> allEpicTasks = new ArrayList<>();
         for (Integer taskId : tasks.keySet()) {
             Task task = tasks.get(taskId);
@@ -30,15 +27,7 @@ public class InMemoryTaskManager implements TaskManager{
             }
             if (task instanceof EpicTask) {
                 allEpicTasks.add(task);
-                EpicTask epicTask = (EpicTask) task;
-                for (Integer subTaskId : epicTask.getSubTasksIds()) {
-                    if (tasks.containsKey(subTaskId)
-                            && (tasks.get(subTaskId) instanceof SubTask)) {
-                        allEpicTasks.add(tasks.get(subTaskId));
-                    } else {
-                        allEpicTasks.add(null);
-                    }
-                }
+                allEpicTasks.addAll(getAllSubTasksByEpicTask(task));
                 continue;
             }
             allTasks.add(task);
@@ -50,6 +39,7 @@ public class InMemoryTaskManager implements TaskManager{
     @Override
     public void deleteAllTasks() {
         tasks.clear();
+        historyManager.clear();
     }
 
     @Override
@@ -133,9 +123,11 @@ public class InMemoryTaskManager implements TaskManager{
             for (Integer subTaskId : epicTask.getSubTasksIds()) {
                 if (tasks.containsKey(subTaskId) && (tasks.get(subTaskId) instanceof SubTask)) {
                     tasks.remove(subTaskId);
+                    historyManager.remove(subTaskId);
                 }
             }
             tasks.remove(taskId);
+            historyManager.remove(taskId);
             return taskId;
         }
         if (task instanceof SubTask) {
@@ -143,15 +135,18 @@ public class InMemoryTaskManager implements TaskManager{
             if (!tasks.containsKey(subTask.getMasterTaskId())
                     || !(tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
                 tasks.remove(taskId);
+                historyManager.remove(taskId);
                 return 0;
             }
             EpicTask masterTask = (EpicTask) tasks.get(subTask.getMasterTaskId());
             masterTask.removeSubTaskId(taskId);
             tasks.remove(taskId);
+            historyManager.remove(taskId);
             updateEpicTaskStatus(masterTask);
             return taskId;
         }
         tasks.remove(taskId);
+        historyManager.remove(taskId);
         return taskId;
     }
 
@@ -170,6 +165,15 @@ public class InMemoryTaskManager implements TaskManager{
             }
         }
         return allSubTasks;
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        ArrayList<Task> history = new ArrayList<>();
+        for (Integer taskId : historyManager.getHistory()) {
+            history.add(tasks.getOrDefault(taskId, null));
+        }
+        return history;
     }
 
     private boolean updateEpicTaskStatus(EpicTask epicTask) {
@@ -199,14 +203,5 @@ public class InMemoryTaskManager implements TaskManager{
 
     private int getNextTaskId() {
         return nextTaskId++;
-    }
-
-    @Override
-    public List<Task> getHistory() {
-        ArrayList<Task> history = new ArrayList<>();
-        for (Integer taskId : historyManager.getHistory()) {
-            history.add(tasks.getOrDefault(taskId, null));
-        }
-        return history;
     }
 }

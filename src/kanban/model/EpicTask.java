@@ -1,17 +1,19 @@
 package kanban.model;
 
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ArrayList;
 
 public class EpicTask extends Task {
-    private final List<Integer> subTasksIds = new ArrayList<>();
+    private final Set<Integer> subTasksIds = new LinkedHashSet<>();
 
     public EpicTask(String name, String description) {
         super(name, description);
     }
 
     public List<Integer> getSubTasksIds() {
-        return subTasksIds;
+        return new ArrayList<>(subTasksIds);
     }
 
     public void addSubTaskId(int subTaskId) {
@@ -19,7 +21,7 @@ public class EpicTask extends Task {
     }
 
     public void removeSubTaskId(int subTaskId) {
-        subTasksIds.remove((Integer) subTaskId);
+        subTasksIds.remove(subTaskId);
     }
 
     @Override
@@ -35,11 +37,7 @@ public class EpicTask extends Task {
         if (subTasksIds.isEmpty()) {
             result += "subTasksIds.isEmpty}";
         } else {
-            result += "subTasksIds=[" + subTasksIds.get(0);
-            for (int i = 1; i < subTasksIds.size(); i++) {
-                result += ", " + subTasksIds.get(i);
-            }
-            result +="]}";
+            result += "subTasksIds=" + subTasksIds + "}";
         }
         return result;
     }
