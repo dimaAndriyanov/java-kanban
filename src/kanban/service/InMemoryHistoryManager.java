@@ -8,15 +8,16 @@ import java.util.ArrayList;
 
 public class InMemoryHistoryManager implements HistoryManager{
     private final Map<Integer, TaskIdNode> watchedTasks = new HashMap<>();
-    private final TaskIdNode tail = new TaskIdNode(0);
+    private TaskIdNode head;
+    private TaskIdNode tail;
 
     @Override
     public List<Integer> getHistory() {
         ArrayList<Integer> history = new ArrayList<>();
-        TaskIdNode taskIdNode = tail.getPrevious();
+        TaskIdNode taskIdNode = head;
         while (taskIdNode != null) {
             history.add(taskIdNode.getTaskId());
-            taskIdNode = taskIdNode.getPrevious();
+            taskIdNode = taskIdNode.getNext();
         }
         return history;
     }
@@ -35,32 +36,40 @@ public class InMemoryHistoryManager implements HistoryManager{
 
     @Override
     public void clear() {
-        tail.setPrevious(null);
+        head = null;
+        tail = null;
     }
 
     private void linkLast(int taskId) {
         TaskIdNode newNode = new TaskIdNode(taskId);
-        TaskIdNode lastNode = tail.getPrevious();
-        if (lastNode != null) {
-            lastNode.setNext(newNode);
-            newNode.setPrevious(lastNode);
+        if (tail == null) {
+            head = newNode;
+        } else {
+            tail.setNext(newNode);
+            newNode.setPrevious(tail);
         }
-        newNode.setNext(tail);
-        tail.setPrevious(newNode);
+        tail = newNode;
         watchedTasks.put(taskId, newNode);
     }
     private void removeNode (TaskIdNode taskIdNode) {
         if (taskIdNode == null) {
             return;
         }
-        if (taskIdNode == tail) {
+        if (taskIdNode == head) {
+            if (taskIdNode == tail) {
+                clear();
+            } else {
+                head = taskIdNode.getNext();
+                head.setPrevious(null);
+            }
             return;
         }
-        TaskIdNode prevTask = taskIdNode.getPrevious();
-        TaskIdNode nextTask = taskIdNode.getNext();
-        if (prevTask != null) {
-            prevTask.setNext(nextTask);
+        if (taskIdNode == tail) {
+            tail = taskIdNode.getPrevious();
+            tail.setNext(null);
+            return;
         }
-        nextTask.setPrevious(prevTask);
+        taskIdNode.getPrevious().setNext(taskIdNode.getNext());
+        taskIdNode.getNext().setPrevious(taskIdNode.getPrevious());
     }
 }
