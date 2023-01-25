@@ -1,11 +1,12 @@
 package kanban.service;
 
 import java.util.List;
+import kanban.model.Task;
 
 public interface HistoryManager {
-    List<Integer> getHistory();
+    List<Task> getHistory();
 
-    void add(int taskId);
+    void add(Task task);
 
     void remove(int taskId);
 

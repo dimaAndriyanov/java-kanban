@@ -27,10 +27,12 @@ public class InMemoryTaskManager implements TaskManager{
             }
             if (task instanceof EpicTask) {
                 allEpicTasks.add(task);
+                historyManager.add(task);
                 allEpicTasks.addAll(getAllSubTasksByEpicTask(task));
                 continue;
             }
             allTasks.add(task);
+            historyManager.add(task);
         }
         allTasks.addAll(allEpicTasks);
         return allTasks;
@@ -47,8 +49,9 @@ public class InMemoryTaskManager implements TaskManager{
         if (!tasks.containsKey(taskId)) {
             return null;
         }
-        historyManager.add(taskId);
-        return tasks.get(taskId);
+        Task task = tasks.get(taskId);
+        historyManager.add(task);
+        return task;
     }
 
     @Override
@@ -160,6 +163,7 @@ public class InMemoryTaskManager implements TaskManager{
             if (tasks.containsKey(subTaskId)
                 && tasks.get(subTaskId) instanceof SubTask) {
                 allSubTasks.add((SubTask) tasks.get(subTaskId));
+                historyManager.add(tasks.get(subTaskId));
             } else {
                 allSubTasks.add(null);
             }
@@ -169,11 +173,7 @@ public class InMemoryTaskManager implements TaskManager{
 
     @Override
     public List<Task> getHistory() {
-        ArrayList<Task> history = new ArrayList<>();
-        for (Integer taskId : historyManager.getHistory()) {
-            history.add(tasks.getOrDefault(taskId, null));
-        }
-        return history;
+        return historyManager.getHistory();
     }
 
     private boolean updateEpicTaskStatus(EpicTask epicTask) {
