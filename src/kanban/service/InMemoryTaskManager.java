@@ -1,12 +1,13 @@
 package kanban.service;
 
 import kanban.model.*;
+import kanban.exceptions.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 
-public class InMemoryTaskManager implements TaskManager{
+public class InMemoryTaskManager implements TaskManager {
     private int nextTaskId;
     private final HistoryManager historyManager;
     private final Map<Integer, Task> tasks = new HashMap<>();
@@ -28,7 +29,10 @@ public class InMemoryTaskManager implements TaskManager{
             if (task instanceof EpicTask) {
                 allEpicTasks.add(task);
                 historyManager.add(task);
-                allEpicTasks.addAll(getAllSubTasksByEpicTask(task));
+                try {
+                    allEpicTasks.addAll(getAllSubTasksByEpicTask(taskId));
+                } catch (TaskManagerException ignored) {
+                }
                 continue;
             }
             allTasks.add(task);
@@ -45,9 +49,9 @@ public class InMemoryTaskManager implements TaskManager{
     }
 
     @Override
-    public Task getTaskByTaskId(int taskId) {
+    public Task getTaskByTaskId(int taskId) throws TaskManagerException {
         if (!tasks.containsKey(taskId)) {
-            return null;
+            throw new NoSuchTaskException("There is no Task with such taskId");
         }
         Task task = tasks.get(taskId);
         historyManager.add(task);
@@ -55,16 +59,18 @@ public class InMemoryTaskManager implements TaskManager{
     }
 
     @Override
-    public int createTask(Task task) {
+    public int createTask(Task task) throws TaskManagerException {
         if (task == null) {
-            return 0;
+            throw new TaskManagerException("Can not create null Task");
         }
         if (task instanceof SubTask) {
             SubTask subTask = (SubTask) task;
             int masterTaskId = subTask.getMasterTaskId();
-            if (!tasks.containsKey(masterTaskId)
-                    || !(tasks.get(masterTaskId) instanceof EpicTask)) {
-                return 0;
+            if (!tasks.containsKey(masterTaskId)) {
+                throw new NoSuchTaskException("There is no Task with such musterTaskId");
+            }
+            if (!(tasks.get(masterTaskId) instanceof EpicTask)) {
+                throw new TaskTypeMismatchException("Task with such masterTaskId is not an EpicTask");
             }
             subTask.setTaskId(getNextTaskId());
             tasks.put(subTask.getTaskId(), subTask);
@@ -73,25 +79,31 @@ public class InMemoryTaskManager implements TaskManager{
             updateEpicTaskStatus(masterTask);
             return subTask.getTaskId();
         }
+        if (task instanceof EpicTask) {
+            if (((EpicTask) task).hasSubTasks()) {
+                throw new TaskManagerException("EpicTask mast not have SubTasks");
+            }
+        }
         task.setTaskId(getNextTaskId());
         tasks.put(task.getTaskId(), task);
         return task.getTaskId();
     }
 
     @Override
-    public int updateTask(Task task) {
-        if (task == null || !tasks.containsKey(task.getTaskId())
-            || (task.getClass() != tasks.get(task.getTaskId()).getClass())) {
-            return 0;
+    public int updateTask(Task task) throws TaskManagerException {
+        if (task == null) {
+            throw new TaskManagerException("Can not update null Task");
+        }
+        if (!tasks.containsKey(task.getTaskId())) {
+            throw new NoSuchTaskException("There is no such task");
+        }
+        if (task.getClass() != tasks.get(task.getTaskId()).getClass()) {
+            throw new TaskTypeMismatchException("Updated task and original task have different types");
         }
         if (task instanceof SubTask) {
             SubTask subTask = (SubTask) task;
             if (subTask.getMasterTaskId() != ((SubTask) tasks.get(subTask.getTaskId())).getMasterTaskId()) {
-                return 0;
-            }
-            if (!tasks.containsKey(subTask.getMasterTaskId())
-                    || !(tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
-                return 0;
+                throw new TaskManagerException("Updated task and original task have different masterTaskIds");
             }
             tasks.put(subTask.getTaskId(), subTask);
             updateEpicTaskStatus((EpicTask) tasks.get(subTask.getMasterTaskId()));
@@ -101,52 +113,39 @@ public class InMemoryTaskManager implements TaskManager{
             EpicTask updatedEpicTask = (EpicTask) task;
             EpicTask originalEpicTask = (EpicTask) tasks.get(updatedEpicTask.getTaskId());
             if (updatedEpicTask.getSubTasksIds().size() != originalEpicTask.getSubTasksIds().size()) {
-                return 0;
+                throw new TaskManagerException("Updated task and original task have different number of subTaskIds");
             }
             for (Integer subTaskId : updatedEpicTask.getSubTasksIds()) {
                 if (!originalEpicTask.getSubTasksIds().contains(subTaskId)) {
-                    return 0;
+                    throw new TaskManagerException("Updated task and original task have different subTaskIds");
                 }
             }
-            tasks.put(updatedEpicTask.getTaskId(), updatedEpicTask);
-            return updatedEpicTask.getTaskId();
         }
         tasks.put(task.getTaskId(), task);
         return task.getTaskId();
     }
 
     @Override
-    public int deleteTaskByTaskId(int taskId) {
+    public int deleteTaskByTaskId(int taskId) throws TaskManagerException {
         if (!tasks.containsKey(taskId)) {
-            return 0;
+            throw new NoSuchTaskException("There is no Task with such taskId");
         }
         Task task = tasks.get(taskId);
+        if (task instanceof SubTask) {
+            SubTask subTask = (SubTask) task;
+            tasks.remove(taskId);
+            historyManager.remove(taskId);
+            EpicTask masterTask = (EpicTask) tasks.get(subTask.getMasterTaskId());
+            masterTask.removeSubTaskId(taskId);
+            updateEpicTaskStatus(masterTask);
+            return taskId;
+        }
         if (task instanceof EpicTask) {
             EpicTask epicTask = (EpicTask) task;
             for (Integer subTaskId : epicTask.getSubTasksIds()) {
-                if (tasks.containsKey(subTaskId) && (tasks.get(subTaskId) instanceof SubTask)) {
-                    tasks.remove(subTaskId);
-                    historyManager.remove(subTaskId);
-                }
+                tasks.remove(subTaskId);
+                historyManager.remove(subTaskId);
             }
-            tasks.remove(taskId);
-            historyManager.remove(taskId);
-            return taskId;
-        }
-        if (task instanceof SubTask) {
-            SubTask subTask = (SubTask) task;
-            if (!tasks.containsKey(subTask.getMasterTaskId())
-                    || !(tasks.get(subTask.getMasterTaskId()) instanceof EpicTask)) {
-                tasks.remove(taskId);
-                historyManager.remove(taskId);
-                return 0;
-            }
-            EpicTask masterTask = (EpicTask) tasks.get(subTask.getMasterTaskId());
-            masterTask.removeSubTaskId(taskId);
-            tasks.remove(taskId);
-            historyManager.remove(taskId);
-            updateEpicTaskStatus(masterTask);
-            return taskId;
         }
         tasks.remove(taskId);
         historyManager.remove(taskId);
@@ -154,19 +153,18 @@ public class InMemoryTaskManager implements TaskManager{
     }
 
     @Override
-    public List<SubTask> getAllSubTasksByEpicTask(Task task) {
-        if (!(task instanceof EpicTask)) {
-            return null;
+    public List<SubTask> getAllSubTasksByEpicTask(int taskId) throws TaskManagerException {
+        if (!tasks.containsKey(taskId)) {
+            throw new NoSuchTaskException("There is no task with such taskId");
         }
+        if (!(tasks.get(taskId) instanceof EpicTask)) {
+            throw new TaskTypeMismatchException("Task with such taskId is not an EpicTask");
+        }
+        EpicTask epicTask = (EpicTask) tasks.get(taskId);
         ArrayList<SubTask> allSubTasks = new ArrayList<>();
-        for (Integer subTaskId : ((EpicTask) task).getSubTasksIds()) {
-            if (tasks.containsKey(subTaskId)
-                && tasks.get(subTaskId) instanceof SubTask) {
-                allSubTasks.add((SubTask) tasks.get(subTaskId));
-                historyManager.add(tasks.get(subTaskId));
-            } else {
-                allSubTasks.add(null);
-            }
+        for (Integer subTaskId : epicTask.getSubTasksIds()) {
+            allSubTasks.add((SubTask) tasks.get(subTaskId));
+            historyManager.add(tasks.get(subTaskId));
         }
         return allSubTasks;
     }
@@ -176,29 +174,23 @@ public class InMemoryTaskManager implements TaskManager{
         return historyManager.getHistory();
     }
 
-    private boolean updateEpicTaskStatus(EpicTask epicTask) {
+    private void updateEpicTaskStatus(EpicTask epicTask) {
         if (epicTask.getSubTasksIds().isEmpty()) {
             epicTask.setStatus(TaskStatus.NEW);
-            return true;
-        }
-        for (Integer subTaskId : epicTask.getSubTasksIds()) {
-            if (!tasks.containsKey(subTaskId)) {
-                return false;
-            }
+            return;
         }
         TaskStatus status = tasks.get(epicTask.getSubTasksIds().get(0)).getStatus();
         if (status == TaskStatus.IN_PROGRESS) {
             epicTask.setStatus(TaskStatus.IN_PROGRESS);
-            return true;
+            return;
         }
         for (int i = 1; i < epicTask.getSubTasksIds().size(); i++) {
             if (status != tasks.get(epicTask.getSubTasksIds().get(i)).getStatus()) {
                 epicTask.setStatus(TaskStatus.IN_PROGRESS);
-                return true;
+                return;
             }
         }
         epicTask.setStatus(status);
-        return true;
     }
 
     private int getNextTaskId() {

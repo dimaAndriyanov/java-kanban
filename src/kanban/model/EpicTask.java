@@ -24,6 +24,10 @@ public class EpicTask extends Task {
         subTasksIds.remove(subTaskId);
     }
 
+    public boolean hasSubTasks() {
+        return !subTasksIds.isEmpty();
+    }
+
     @Override
     public String toString() {
         String result = "EpicTask{"
