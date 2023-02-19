@@ -17,7 +17,7 @@ public interface TaskManager {
 
     int deleteTaskByTaskId(int taskId) throws TaskManagerException;
 
-    List<SubTask> getAllSubTasksByEpicTask(int taskId) throws TaskManagerException;
+    List<SubTask> getAllSubTasksByEpicTaskId(int taskId) throws TaskManagerException;
 
     List<Task> getHistory();
 }

@@ -1,5 +1,6 @@
 package kanban.service;
 
+import kanban.exceptions.HistoryManagerException;
 import kanban.model.Node;
 import kanban.model.Task;
 import java.util.Map;
@@ -24,7 +25,10 @@ public class InMemoryHistoryManager implements HistoryManager{
     }
 
     @Override
-    public void add(Task task) {
+    public void add(Task task) throws HistoryManagerException {
+        if (task == null) {
+            throw new HistoryManagerException("Can not add null Task to history");
+        }
         removeNode(watchedTasks.getOrDefault(task.getTaskId(), null));
         linkLast(task);
     }

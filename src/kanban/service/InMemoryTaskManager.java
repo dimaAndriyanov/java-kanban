@@ -19,27 +19,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getAllTasks() {
-        ArrayList<Task> allTasks = new ArrayList<>();
-        ArrayList<Task> allEpicTasks = new ArrayList<>();
-        for (Integer taskId : tasks.keySet()) {
-            Task task = tasks.get(taskId);
-            if (task instanceof SubTask) {
-                continue;
-            }
-            if (task instanceof EpicTask) {
-                allEpicTasks.add(task);
+        List<Task> result = getAllTasksNoHistory();
+        for (Task task : result) {
+            try {
                 historyManager.add(task);
-                try {
-                    allEpicTasks.addAll(getAllSubTasksByEpicTask(taskId));
-                } catch (TaskManagerException ignored) {
-                }
-                continue;
+            } catch (HistoryManagerException ignored) {
             }
-            allTasks.add(task);
-            historyManager.add(task);
         }
-        allTasks.addAll(allEpicTasks);
-        return allTasks;
+        return result;
     }
 
     @Override
@@ -54,7 +41,10 @@ public class InMemoryTaskManager implements TaskManager {
             throw new NoSuchTaskException("There is no Task with such taskId");
         }
         Task task = tasks.get(taskId);
-        historyManager.add(task);
+        try {
+            historyManager.add(task);
+        } catch (HistoryManagerException ignored) {
+        }
         return task;
     }
 
@@ -153,7 +143,49 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<SubTask> getAllSubTasksByEpicTask(int taskId) throws TaskManagerException {
+    public List<SubTask> getAllSubTasksByEpicTaskId(int taskId) throws TaskManagerException {
+        List<SubTask> result = getAllSubTasksByEpicTaskIdNoHistory(taskId);
+        for (Task task : result) {
+            try{
+                historyManager.add(task);
+            } catch (HistoryManagerException ignored) {
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public List<Task> getHistory() {
+        return historyManager.getHistory();
+    }
+
+    void setNextTaskId(int nextTaskId) {
+        this.nextTaskId = nextTaskId;
+    }
+
+    List<Task> getAllTasksNoHistory() {
+        ArrayList<Task> allTasks = new ArrayList<>();
+        ArrayList<Task> allEpicTasks = new ArrayList<>();
+        for (Integer taskId : tasks.keySet()) {
+            Task task = tasks.get(taskId);
+            if (task instanceof SubTask) {
+                continue;
+            }
+            if (task instanceof EpicTask) {
+                allEpicTasks.add(task);
+                try {
+                    allEpicTasks.addAll(getAllSubTasksByEpicTaskIdNoHistory(taskId));
+                } catch (TaskManagerException ignored) {
+                }
+                continue;
+            }
+            allTasks.add(task);
+        }
+        allTasks.addAll(allEpicTasks);
+        return allTasks;
+    }
+
+    private List<SubTask> getAllSubTasksByEpicTaskIdNoHistory(int taskId) throws TaskManagerException {
         if (!tasks.containsKey(taskId)) {
             throw new NoSuchTaskException("There is no task with such taskId");
         }
@@ -164,14 +196,8 @@ public class InMemoryTaskManager implements TaskManager {
         ArrayList<SubTask> allSubTasks = new ArrayList<>();
         for (Integer subTaskId : epicTask.getSubTasksIds()) {
             allSubTasks.add((SubTask) tasks.get(subTaskId));
-            historyManager.add(tasks.get(subTaskId));
         }
         return allSubTasks;
-    }
-
-    @Override
-    public List<Task> getHistory() {
-        return historyManager.getHistory();
     }
 
     private void updateEpicTaskStatus(EpicTask epicTask) {
