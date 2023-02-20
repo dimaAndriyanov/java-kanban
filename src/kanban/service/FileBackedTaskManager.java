@@ -68,7 +68,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         return result;
     }
 
-    public static FileBackedTaskManager loadFromFile(Path file) throws ReadFromFileException {
+    public static FileBackedTaskManager loadFromFile(Path file)
+            throws TaskManagerException, FileBackedTaskManagerException, InvalidDataException {
         FileBackedTaskManager manager = new FileBackedTaskManager(1, new InMemoryHistoryManager(), file);
         try (BufferedReader fileReader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             String lineFromFile = fileReader.readLine();
@@ -94,7 +95,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                 throw new ReadFromFileException();
             }
             manager.addHistoryFromString(lineFromFile);
-        } catch (IOException | InvalidDataException | TaskManagerException exception) {
+        } catch (IOException exception) {
             throw new ReadFromFileException();
         }
         return manager;
@@ -169,7 +170,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         return result.toString();
     }
 
-    private void addHistoryFromString(String value) throws InvalidDataException {
+    private void addHistoryFromString(String value) throws TaskManagerException, InvalidDataException {
         String[] taskIds = value.split(",");
         try {
             for (String taskId : taskIds) {

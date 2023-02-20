@@ -21,10 +21,7 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getAllTasks() {
         List<Task> result = getAllTasksNoHistory();
         for (Task task : result) {
-            try {
-                historyManager.add(task);
-            } catch (HistoryManagerException ignored) {
-            }
+            historyManager.add(task);
         }
         return result;
     }
@@ -41,10 +38,7 @@ public class InMemoryTaskManager implements TaskManager {
             throw new NoSuchTaskException("There is no Task with such taskId");
         }
         Task task = tasks.get(taskId);
-        try {
-            historyManager.add(task);
-        } catch (HistoryManagerException ignored) {
-        }
+        historyManager.add(task);
         return task;
     }
 
@@ -146,10 +140,7 @@ public class InMemoryTaskManager implements TaskManager {
     public List<SubTask> getAllSubTasksByEpicTaskId(int taskId) throws TaskManagerException {
         List<SubTask> result = getAllSubTasksByEpicTaskIdNoHistory(taskId);
         for (Task task : result) {
-            try{
-                historyManager.add(task);
-            } catch (HistoryManagerException ignored) {
-            }
+            historyManager.add(task);
         }
         return result;
     }
@@ -173,10 +164,7 @@ public class InMemoryTaskManager implements TaskManager {
             }
             if (task instanceof EpicTask) {
                 allEpicTasks.add(task);
-                try {
-                    allEpicTasks.addAll(getAllSubTasksByEpicTaskIdNoHistory(taskId));
-                } catch (TaskManagerException ignored) {
-                }
+                allEpicTasks.addAll(getAllSubTasksByEpicTaskIdNoHistory(taskId));
                 continue;
             }
             allTasks.add(task);

@@ -9,15 +9,15 @@ public interface TaskManager {
 
     void deleteAllTasks();
 
-    Task getTaskByTaskId(int taskId) throws TaskManagerException;
+    Task getTaskByTaskId(int taskId);
 
-    int createTask(Task task) throws TaskManagerException;
+    int createTask(Task task);
 
-    int updateTask(Task task) throws TaskManagerException;
+    int updateTask(Task task);
 
-    int deleteTaskByTaskId(int taskId) throws TaskManagerException;
+    int deleteTaskByTaskId(int taskId);
 
-    List<SubTask> getAllSubTasksByEpicTaskId(int taskId) throws TaskManagerException;
+    List<SubTask> getAllSubTasksByEpicTaskId(int taskId);
 
     List<Task> getHistory();
 }
