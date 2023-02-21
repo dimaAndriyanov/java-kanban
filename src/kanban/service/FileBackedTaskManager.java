@@ -11,8 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class FileBackedTaskManager extends InMemoryTaskManager implements TaskManager {
-    final private Path backupFile;
+public class FileBackedTaskManager extends InMemoryTaskManager {
+    private final Path backupFile;
 
     public FileBackedTaskManager(int nextTaskId, HistoryManager historyManager, Path backupFile) {
         super(nextTaskId, historyManager);
@@ -149,12 +149,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
                     task = new SubTask(parts[2], parts[4], Integer.parseInt(parts[5]));
                     break;
                 default:
-                    throw new InvalidDataException();
+                    throw new InvalidDataException("Could not read task type from String");
             }
             task.setTaskId(Integer.parseInt(parts[0]));
             task.setStatus(TaskStatus.valueOf(parts[3]));
         } catch (Exception exception) {
-            throw new InvalidDataException();
+            throw new InvalidDataException("Could not read task from String");
         }
         return task;
     }
@@ -170,14 +170,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager implements TaskMa
         return result.toString();
     }
 
-    private void addHistoryFromString(String value) throws TaskManagerException, InvalidDataException {
+    private void addHistoryFromString(String value) throws InvalidDataException {
         String[] taskIds = value.split(",");
         try {
             for (String taskId : taskIds) {
                 super.getTaskByTaskId(Integer.parseInt(taskId));
             }
         } catch (Exception exception) {
-            throw new InvalidDataException();
+            throw new InvalidDataException("Could not read history from String");
         }
     }
 }
