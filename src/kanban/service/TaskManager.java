@@ -1,7 +1,6 @@
 package kanban.service;
 
 import kanban.model.*;
-import kanban.exceptions.*;
 import java.util.List;
 
 public interface TaskManager {

@@ -1,5 +1,7 @@
 package kanban.model;
 
+import java.time.format.DateTimeFormatter;
+
 public class SubTask extends Task {
     private final int masterTaskId;
 
@@ -21,12 +23,19 @@ public class SubTask extends Task {
         } else {
             result += "description.length=" + getDescription().length() + ", ";
         }
-        result += "taskId=" + getTaskId() + ", status='" + getStatus() + "', ";
+        result += "taskId=" + getTaskId() + ", status='" + getStatus() + "', startTime=";
+        if (getStartTime() == null) {
+            result += "null, duration=0, ";
+        } else {
+            result += "'" +getStartTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.HH:mm.VV"))
+                    + "', duration = " + getDuration() +", ";
+        }
         if (masterTaskId == 0) {
             result += "masterTask=null}";
         } else {
             result += "masterTaskId=" + masterTaskId + "}";
         }
+
         return result;
     }
 }

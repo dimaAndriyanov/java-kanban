@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -112,7 +114,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 fileWriter.newLine();
             }
             fileWriter.newLine();
-            fileWriter.write(historyToString());
+            String history = historyToString();
+            if (!history.isEmpty()) {
+                fileWriter.write(historyToString());
+            } else {
+                fileWriter.newLine();
+            }
         } catch (IOException exception) {
             throw new SaveToFileException();
         }
@@ -128,6 +135,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             result.append(TaskType.TASK).append(",");
         }
         result.append(String.join(",", task.getName(), task.getStatus().toString(), task.getDescription()));
+        if (!(task instanceof EpicTask)) {
+            if (!task.areTimePropertiesSet()) {
+                result.append(",null,0");
+            } else {
+                result.append(",")
+                        .append(task.getStartTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy.HH:mm.VV")))
+                        .append(",")
+                        .append(task.getDuration());
+            }
+        }
         if (task instanceof SubTask) {
             result.append(",").append(((SubTask) task).getMasterTaskId());
         }
@@ -146,13 +163,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     task = new EpicTask(parts[2], parts[4]);
                     break;
                 case SUBTASK:
-                    task = new SubTask(parts[2], parts[4], Integer.parseInt(parts[5]));
+                    task = new SubTask(parts[2], parts[4], Integer.parseInt(parts[7]));
                     break;
                 default:
                     throw new InvalidDataException("Could not read task type from String");
             }
             task.setTaskId(Integer.parseInt(parts[0]));
             task.setStatus(TaskStatus.valueOf(parts[3]));
+            if (!(task instanceof EpicTask)) {
+                if (!(parts[5].equals("null"))) {
+                    task.setTimeProperties(
+                            ZonedDateTime.parse(parts[5], DateTimeFormatter.ofPattern("dd.MM.yyyy.HH:mm.VV")),
+                            Integer.parseInt(parts[6])
+                    );
+                }
+            }
         } catch (Exception exception) {
             throw new InvalidDataException("Could not read task from String");
         }
@@ -171,6 +196,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private void addHistoryFromString(String value) throws InvalidDataException {
+        if (value.isEmpty()) {
+            return;
+        }
         String[] taskIds = value.split(",");
         try {
             for (String taskId : taskIds) {
