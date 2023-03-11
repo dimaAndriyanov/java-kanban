@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,6 +31,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
         manager.createTask(new Task("a", "b"));
         manager.createTask(new EpicTask("c", "d"));
         manager.createTask(new SubTask("e", "f", 2));
+    }
+
+    public void assertTaskListEquals(List<Task> firstList, List<Task> secondList) {
+        assertEquals(firstList.size(), secondList.size());
+        for (int i = 0; i < firstList.size(); i++) {
+            assertEquals(firstList.get(i).toString(), secondList.get(i).toString());
+        }
     }
 
     @Test
@@ -334,5 +342,52 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
         assertNotNull(manager.getHistory());
         assertTrue(manager.getHistory().isEmpty());
+    }
+
+    @Test
+    public void getPrioritizedTasks() {
+        Task task1 = new Task("a", "b");
+        task1.setTimeProperties(startTime, 10);
+        manager.createTask(task1);
+        Task task2 = new Task("c", "d");
+        manager.createTask(task2);
+        Task task3 = new Task("e", "f");
+        task3.setTimeProperties(startTime.minusMinutes(60), 10);
+        manager.createTask(task3);
+        EpicTask epicTask1 = new EpicTask("g", "h");
+        manager.createTask(epicTask1);
+        assertArrayEquals(new Task[] {task3, task1, task2, epicTask1},
+                manager.getPrioritizedTasks().toArray());
+
+        SubTask subTask1 = new SubTask("i", "j", 4);
+        subTask1.setTimeProperties(startTime.plusMinutes(30), 10);
+        manager.createTask(subTask1);
+        SubTask subTask2 = new SubTask("k", "l", 4);
+        subTask2.setTimeProperties(startTime.minusMinutes(20), 10);
+        manager.createTask(subTask2);
+        SubTask subTask3 = new SubTask("m", "n", 4);
+        subTask3.setTimeProperties(startTime.plusMinutes(90), 10);
+        manager.createTask(subTask3);
+        task1 = new Task("o", "p");
+        task1.setTaskId(1);
+        manager.updateTask(task1);
+        task2 = new Task("q", "r");
+        task2.setTaskId(2);
+        task2.setTimeProperties(startTime.plusMinutes(10), 10);
+        manager.updateTask(task2);
+        assertArrayEquals(new Task[] {task3, subTask2, task2, subTask1, subTask3, task1, epicTask1},
+                manager.getPrioritizedTasks().toArray());
+
+        manager.deleteTaskByTaskId(3);
+        manager.deleteTaskByTaskId(7);
+        assertArrayEquals(new Task[] {subTask2, task2, subTask1, task1, epicTask1},
+                manager.getPrioritizedTasks().toArray());
+
+        manager.deleteTaskByTaskId(4);
+        assertArrayEquals(new Task[] {task2, task1},
+                manager.getPrioritizedTasks().toArray());
+
+        manager.deleteAllTasks();
+        assertTrue(manager.getPrioritizedTasks().isEmpty());
     }
 }

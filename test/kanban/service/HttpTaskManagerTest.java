@@ -1,33 +1,37 @@
 package kanban.service;
 
-import kanban.exceptions.ReadFromFileException;
 import kanban.model.*;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
+class HttpTaskManagerTest extends TaskManagerTest<HttpTaskManager> {
+    public KVServer kvServer;
+
     @BeforeEach
-    public void setManager() {
-        setManager(Managers.getFileBackedTaskManager("resources/BackupFileTest.csv"));
+    public void setManager() throws IOException, InterruptedException {
+        kvServer = new KVServer();
+        kvServer.start();
+        setManager(Managers.getHttpTaskManager(new URL("http://localhost:8078")));
+    }
+
+    @AfterEach
+    public void stopKVServer() {
+        kvServer.stop();
     }
 
     @Test
-    public void saveToFileAndLoadFromFileTest() {
-        assertThrows(ReadFromFileException.class, () -> FileBackedTaskManager.
-                loadFromFile(Paths.get("resources", "Back_Up_File")));
-
-        FileBackedTaskManager newManager = FileBackedTaskManager.
-                loadFromFile(Paths.get("resources", "EmptyBackupFileTest.csv"));
-        assertNotNull(newManager.getAllTasks());
-        assertNotNull(newManager.getHistory());
-        assertTrue(newManager.getAllTasks().isEmpty());
-        assertTrue(newManager.getHistory().isEmpty());
+    public void saveToServerAndLoadFromServer() throws IOException, InterruptedException {
+        assertNotNull(manager.getAllTasks());
+        assertNotNull(manager.getHistory());
+        assertTrue(manager.getAllTasks().isEmpty());
+        assertTrue(manager.getHistory().isEmpty());
 
         createThreeDifferentTasks();
         Task task = new Task("g", "h");
@@ -39,8 +43,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         subTask.setTimeProperties(startTime.plusMinutes(120), 60);
         manager.createTask(subTask);
 
-        Path backupFileTest = Paths.get("resources", "BackupFileTest.csv");
-        newManager = FileBackedTaskManager.loadFromFile(backupFileTest);
+        HttpTaskManager newManager = Managers.getHttpTaskManager(new URL("http://localhost:8078"));
         assertNotNull(newManager.getHistory());
         assertTrue(newManager.getHistory().isEmpty());
         assertTaskListEquals(manager.getAllTasks(), newManager.getAllTasks());
@@ -50,7 +53,7 @@ class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
         manager.getTaskByTaskId(1);
         manager.getAllSubTasksByEpicTaskId(2);
 
-        newManager = FileBackedTaskManager.loadFromFile(backupFileTest);
+        newManager = Managers.getHttpTaskManager(new URL("http://localhost:8078"));
         assertTaskListEquals(manager.getHistory(), newManager.getHistory());
         assertTaskListEquals(manager.getAllTasks(), newManager.getAllTasks());
     }

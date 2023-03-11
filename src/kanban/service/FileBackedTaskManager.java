@@ -70,6 +70,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result;
     }
 
+    @Override
+    public List<Task> getPrioritizedTasks() throws FileBackedTaskManagerException {
+        List<Task> result = super.getPrioritizedTasks();
+        save();
+        return result;
+    }
+
     public static FileBackedTaskManager loadFromFile(Path file)
             throws TaskManagerException, FileBackedTaskManagerException, InvalidDataException {
         FileBackedTaskManager manager = new FileBackedTaskManager(1, new InMemoryHistoryManager(), file);
@@ -103,11 +110,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return manager;
     }
 
-    private int createTaskFromParent(Task task) throws TaskManagerException {
-        return super.createTask(task);
+    void createTaskFromParent(Task task) throws TaskManagerException {
+        super.createTask(task);
     }
 
-    private void save() throws SaveToFileException {
+    void save() throws SaveToFileException {
         try (BufferedWriter fileWriter = Files.newBufferedWriter(backupFile, StandardCharsets.UTF_8)) {
             for (Task task : getAllTasksNoHistory()) {
                 fileWriter.write(toString(task));
@@ -125,7 +132,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    private static String toString(Task task) {
+    static String toString(Task task) {
         StringBuilder result = new StringBuilder(task.getTaskId() + ",");
         if (task instanceof EpicTask) {
             result.append(TaskType.EPIC_TASK).append(",");
@@ -151,7 +158,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result.toString();
     }
 
-    private static Task taskFromString(String value) throws InvalidDataException {
+    static Task taskFromString(String value) throws InvalidDataException {
         Task task;
         String[] parts = value.split(",");
         try {
@@ -184,7 +191,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return task;
     }
 
-    private String historyToString() {
+    String historyToString() {
         StringBuilder result = new StringBuilder();
         for (Task task : getHistory()) {
             result.append(task.getTaskId()).append(",");
@@ -195,7 +202,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return result.toString();
     }
 
-    private void addHistoryFromString(String value) throws InvalidDataException {
+    void addHistoryFromString(String value) throws InvalidDataException {
         if (value.isEmpty()) {
             return;
         }

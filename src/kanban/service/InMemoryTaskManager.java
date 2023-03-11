@@ -230,10 +230,14 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
+    @Override
     public List<Task> getPrioritizedTasks() {
         List<Task> result = new ArrayList<>(sortedByStartTimeTasks);
         result.addAll(tasksWithNoTimeProperties);
         result.addAll(epicTasks);
+        for (Task task : result) {
+            historyManager.add(task);
+        }
         return result;
     }
 
